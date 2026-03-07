@@ -73,15 +73,11 @@ async function onSubmit(values: z.infer<typeof formSchema>) {
                 toast.error('Sign in failed')
                 return;
             }
-            
             await signIn({
                 email,idToken
             })
-            
-            
             toast.success("Sign in successfully")
             router.push('/')
-            console.log('sign-in', values)
         }
     }catch(error){
         console.log(error)

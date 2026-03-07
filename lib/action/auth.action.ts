@@ -2,6 +2,7 @@
 
 import { auth, db } from "@/firebase/admin";
 import { cookies } from "next/headers";
+// import {redirect} from "next/navigation";
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
 export async function signUp(params: SignUpParams) {
@@ -54,6 +55,7 @@ export async function signIn(params: SignInParams){
             }
         }
         await setSessionCookie(idToken)
+       
     }catch(e){
         console.log(e)
        
