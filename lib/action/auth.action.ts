@@ -101,3 +101,30 @@ export async function isAuthenticated(){
     const user =await getCurrentUser();
     return !!user;
 }
+
+export async function getInterviewsByUserId(userId: string): Promise<Interview[]> {
+    const snapshot = await db.collection('interviews')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+    return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    })) as Interview[];
+}
+
+export async function getFeedbackByInterviewId(interviewId: string): Promise<Feedback | null> {
+    const snapshot = await db.collection('feedbacks')
+        .where('interviewId', '==', interviewId)
+        .limit(1)
+        .get();
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    return {
+        id: doc.id,
+        ...doc.data()
+    } as Feedback;
+}
