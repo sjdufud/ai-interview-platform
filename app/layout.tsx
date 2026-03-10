@@ -9,7 +9,7 @@ const monaSans = Mona_Sans({
 
 
 export const metadata: Metadata = {
-  title: "PrepWise",
+  title: "VocaMint",
   description: "AI模拟面试平台",
 };
 
