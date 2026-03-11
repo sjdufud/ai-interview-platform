@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import InterviewCard from "@/components/InterviewCard";
+import LogoutButton from "@/components/LogoutButton";
 import { getCurrentUser, getInterviewsByUserId, getFeedbackByInterviewId } from "@/lib/action/auth.action";
 import { redirect } from "next/navigation";
 
@@ -18,6 +19,8 @@ const Page = async () => {
 
   return (
     <>
+     
+
       <section className="card-cta">
         <div className="flex flex-col gap-6 max-w-lg">
           <h2>Get Interview-Ready with AI-Powered Practice & Feedback</h2>

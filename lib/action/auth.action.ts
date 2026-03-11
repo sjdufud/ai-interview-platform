@@ -128,3 +128,8 @@ export async function getFeedbackByInterviewId(interviewId: string): Promise<Fee
         ...doc.data()
     } as Feedback;
 }
+
+export async function signOut() {
+    const cookieStore = await cookies();
+    cookieStore.delete('session');
+}
