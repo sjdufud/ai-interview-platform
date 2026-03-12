@@ -45,6 +45,7 @@ const Page = async () => {
                 type={interview.type}
                 techstack={interview.techstack}
                 createdAt={interview.createdAt}
+                coverImage={interview.coverImage}
                 feedback={feedbacks[index]}
               />
             ))

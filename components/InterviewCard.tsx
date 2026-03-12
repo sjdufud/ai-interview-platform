@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 import { useRouter } from "next/navigation";
 
-const InterviewCard = ({ interviewId, role, type, techstack, createdAt, feedback }: InterviewCardProps) => {
+const InterviewCard = ({ interviewId, role, type, techstack, createdAt, coverImage, feedback }: InterviewCardProps) => {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
@@ -33,6 +33,7 @@ const InterviewCard = ({ interviewId, role, type, techstack, createdAt, feedback
       setIsDeleting(false);
     }
   };
+  const cover = coverImage || getRandomInterviewCover()
 
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96">
@@ -51,7 +52,7 @@ const InterviewCard = ({ interviewId, role, type, techstack, createdAt, feedback
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
             </svg>
           </button>
-          <Image src={getRandomInterviewCover()} alt="cover image" width={90} height={90} className="rounded-full object-fit size-[90px]" />
+          <Image src={cover} alt="cover image" width={90} height={90} className="rounded-full object-fit size-[90px]" />
           <h3 className="mt-5 capitalize">{role} Interview</h3>
           <div className="flex flex-row gap-5 mt-3">
             <div className="flex flex-row gap-2">

@@ -25,6 +25,7 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
   const isListeningRef = useRef(false)
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const finalTranscriptRef = useRef("")
+  const isProcessingRef = useRef(false)
 
   const speak = useCallback((text: string): Promise<void> => {
     return new Promise((resolve) => {
@@ -50,13 +51,15 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
     if (!recognitionRef.current || isListeningRef.current) return
       isListeningRef.current = true
     try {
-      recognitionRef.current.start()
+      recognitionRef.current.start() //重新启动监听
     } catch {
       isListeningRef.current = false
     }
   }, [])
 
   const sendToAI = useCallback(async (allMessages: ChatMessage[]) => {
+    if (isProcessingRef.current) return
+    isProcessingRef.current = true
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -72,12 +75,14 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
       }
     } catch (e) {
       console.error('AI error:', e)
+    } finally {
+      isProcessingRef.current = false
     }
   }, [questions, speak, startListening, language])
 
   const handleCall = useCallback(async () => {
     setCallStatus(CallStatus.CONNECTING)
-
+    
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SpeechRecognitionAPI) {
       alert('Your browser does not support speech recognition.')
@@ -114,10 +119,9 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
       if (finalText.trim()) {
         const delay = hasInterim ? 3000 : 2000
         silenceTimerRef.current = setTimeout(() => {
-          // User stopped speaking, submit the answer
+          if (isProcessingRef.current) return
           const transcript = finalTranscriptRef.current.trim()
           if (transcript) {
-            // Stop recognition before processing
             recognition.stop()
             isListeningRef.current = false
             finalTranscriptRef.current = ""
@@ -156,10 +160,14 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
     await sendToAI(initialMessages)
   }, [sendToAI, speechLang, startListening, language])
 
+  //它是 messages state 的"影子副本"，专门给 handleDisconnect 用的。
+  //因为 handleDisconnect 是 useCallback 的依赖项，而 messages 又是依赖项，所以需要这个 ref 来避免无限循环。
   const messagesRef = useRef<ChatMessage[]>([])
 
   const handleDisconnect = useCallback(() => {
-    speechSynthesis.cancel()
+    speechSynthesis.cancel()  //正在说的立刻打断，排队等着说的全部丢弃。
+
+    //清楚副作用：静默检测，语音识别实例，监听状态锁，最终识别文本，AI 请求互斥锁
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current)
       silenceTimerRef.current = null
@@ -170,10 +178,11 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
     }
     isListeningRef.current = false
     finalTranscriptRef.current = ""
+    isProcessingRef.current = false
     setCallStatus(CallStatus.FINISHED)
     setIsSpeaking(false)
 
-    // Redirect to feedback page with interview data
+    //在用户结束通话后，将对话记录发送到 feedback 页面
     const params = new URLSearchParams({
       transcript: JSON.stringify(messagesRef.current),
       questions: JSON.stringify(questions || []),
@@ -184,7 +193,7 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
       interviewId: interviewId || "",
       language: language || "en",
     })
-    // Force full page navigation to kill speechSynthesis completely
+    //跳转到 feedback 页面并带上参数
     window.location.href = `/interview/feedback?${params.toString()}`
   }, [questions, role, type, techstack, userId, interviewId, language])
 
@@ -192,6 +201,7 @@ const Agent = ({ userName, userId, interviewId, questions, type, role, techstack
     messagesRef.current = messages
   }, [messages])
 
+  //组件卸载时的资源清理函数。组件卸载：用户通过浏览器后退按钮离开面试页面，父组件条件渲染把Agent移除
   useEffect(() => {
     return () => {
       speechSynthesis.cancel()
